@@ -4,18 +4,16 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.ActivityCompat
+
 import com.example.pinpoint.com.example.pinpoint.LocationListeningCallback
 import com.example.pinpoint.databinding.ActivityMapsBinding
+
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.location.LocationEngineRequest
-import com.mapbox.common.location.compat.permissions.PermissionsManager
-import com.mapbox.common.location.compat.permissions.PermissionsListener
 import com.mapbox.maps.CameraOptions
-
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
@@ -28,16 +26,16 @@ import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 
+import java.lang.ref.WeakReference
+
 
 class MapsActivity : AppCompatActivity() {
 
     private lateinit var mapView: MapView
     private lateinit var locationEngine: LocationEngine
-    private lateinit var permissionsManager: PermissionsManager
-
 
     private val callback = LocationListeningCallback(this)
-
+    private lateinit var locationPermissionHelper: LocationPermissionHelper
 
     private lateinit var binding: ActivityMapsBinding
 
@@ -48,6 +46,7 @@ class MapsActivity : AppCompatActivity() {
         setContentView(mapView)
         mapView.getMapboxMap().loadStyleUri(Style.MAPBOX_STREETS)
         locationEngine = LocationEngineProvider.getBestLocationEngine(this)
+        locationPermissionHelper = LocationPermissionHelper(WeakReference(this))
         onMapReady()
     }
 
@@ -70,7 +69,8 @@ class MapsActivity : AppCompatActivity() {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            checkLocationPermission()
+            // checkLocationPermission()
+            locationPermissionHelper.checkPermissions { onMapReady() }
         }
         locationEngine.requestLocationUpdates(request, callback, mainLooper)
         locationEngine.getLastLocation(callback)
@@ -81,32 +81,6 @@ class MapsActivity : AppCompatActivity() {
         )
         initLocationComponent()
         setupGesturesListener()
-    }
-
-    fun checkLocationPermission(){
-
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            // Permission sensitive logic called here, such as activating the Maps SDK's LocationComponent to show the device's location
-            onMapReady()
-        } else {
-            permissionsManager = PermissionsManager(object : PermissionsListener {
-                override fun onExplanationNeeded(permissionsToExplain: List<String>) {
-                    Toast.makeText(
-                        this@MapsActivity, "You need to accept location permissions.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-
-                override fun onPermissionResult(granted: Boolean) {
-                    if (granted) {
-                        onMapReady()
-                    } else {
-                        this@MapsActivity.finish()
-                    }
-                }
-            })
-            permissionsManager.requestLocationPermissions(this)
-        }
     }
 
     override fun onRequestPermissionsResult(
