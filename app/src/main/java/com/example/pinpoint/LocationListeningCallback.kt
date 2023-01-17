@@ -31,7 +31,5 @@ class LocationListeningCallback internal constructor(activity: Activity) :
 
         // The LocationEngineCallback interface's method which fires when the device's location can not be captured
 
-
-
     }
 }
