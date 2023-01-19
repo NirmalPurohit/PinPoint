@@ -4,11 +4,15 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.TextView
 import androidx.core.app.ActivityCompat
-import com.example.pinpoint.com.example.pinpoint.LocationInitHelper
+import androidx.core.content.ContextCompat
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
+import com.example.pinpoint.R.id.*
+import com.example.pinpoint.com.example.pinpoint.LocationInitHelper
 import com.example.pinpoint.com.example.pinpoint.LocationListeningCallback
-import com.example.pinpoint.databinding.ActivityMapsBinding
 
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
@@ -31,18 +35,39 @@ class MapsActivity : AppCompatActivity() {
     private lateinit var locationPermissionHelper: LocationPermissionHelper
     private lateinit var locationInitHelper: LocationInitHelper
 
-    private lateinit var binding: ActivityMapsBinding
+    private lateinit var mainActionFab: FloatingActionButton
+    private lateinit var addPinFab: FloatingActionButton
+
+    private lateinit var addPinTextView: TextView
+    private lateinit var myLocationText: TextView
+
+    private var isAllFabsVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMapsBinding.inflate(layoutInflater)
-        mapView = MapView(binding.root.context)
-        setContentView(mapView)
+        setContentView(R.layout.activity_maps)
+
+        mapView = findViewById(R.id.mapView)
+        mainActionFab = findViewById(main_action_fab)
+        addPinFab = findViewById(add_pin_fab)
+        addPinTextView = findViewById(add_pin_text)
+        myLocationText = findViewById(user_location_text)
+
+        addPinFab.visibility = View.GONE
+        addPinTextView.visibility = View.GONE
+        myLocationText.visibility = View.GONE
+
         locationInitHelper = LocationInitHelper(WeakReference(this))
         locationInitHelper.setMapView(mapView)
+
         mapView.getMapboxMap().loadStyleUri(Style.MAPBOX_STREETS)
+
         locationEngine = LocationEngineProvider.getBestLocationEngine(this)
+
         locationPermissionHelper = LocationPermissionHelper(WeakReference(this))
+
+        isAllFabsVisible = false
+
         onMapReady()
     }
 
@@ -76,7 +101,54 @@ class MapsActivity : AppCompatActivity() {
         )
         locationInitHelper.initLocationComponent()
         locationInitHelper.setupGesturesListener()
+        setupFabActions()
     }
+
+    fun setupFabActions(){
+        mainActionFab.setOnClickListener(
+            View.OnClickListener {
+                (if (!isAllFabsVisible!!) {
+                    unfoldFAB()
+
+                    /*mainActionFab.setOnClickListener {
+                        onMapReady()
+                        Toast.makeText(this, "isAllFabsVisible: " + isAllFabsVisible, Toast.LENGTH_LONG).show()
+                        foldFAB()
+                        isAllFabsVisible = false
+                    }*/
+
+                    true
+                }else {
+                    foldFAB()
+
+                    false
+                }).also { isAllFabsVisible = it }
+            })
+
+        addPinFab.setOnClickListener{
+                foldFAB()
+                isAllFabsVisible = false
+        }
+        }
+
+    private fun unfoldFAB() {
+        addPinFab.show()
+        addPinTextView.visibility = View.VISIBLE
+        myLocationText.visibility = View.VISIBLE
+
+        mapView.foreground = ContextCompat.getDrawable(this, R.drawable.fab_foreground)
+        mainActionFab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_my_location))
+    }
+
+    private fun foldFAB() {
+        addPinFab.hide()
+        addPinTextView.visibility = View.GONE
+        myLocationText.visibility = View.GONE
+
+        mapView.foreground = null
+        mainActionFab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_main_action))
+    }
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

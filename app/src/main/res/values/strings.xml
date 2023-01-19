@@ -3,4 +3,6 @@
     <string name="title_activity_maps">Points</string>
     <string name="mapbox_access_token">pk.eyJ1IjoibmlybWFscHVyb2hpdCIsImEiOiJjbGNvMTlidHAxODY2M3BzOXAybng5OHk1In0.UuPsYIGpMOo74-pFJo88bw</string>
     <string name="fab_description">Init tasks</string>
+    <string name="add_pin">Add Pin</string>
+    <string name="my_location">My Location</string>
 </resources>
