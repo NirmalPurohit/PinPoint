@@ -5,9 +5,11 @@ import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
+import android.view.animation.OvershootInterpolator
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 import com.example.pinpoint.R.id.*
@@ -136,14 +138,31 @@ class MapsActivity : AppCompatActivity() {
         addPinTextView.visibility = View.VISIBLE
         myLocationText.visibility = View.VISIBLE
 
+        ViewCompat.animate(mainActionFab).rotation(360.0F).withLayer().setDuration(700L).setInterpolator(
+            OvershootInterpolator(5.0F)
+        ).start()
+
+        ViewCompat.animate(addPinFab).rotation(360.0F).withLayer().setDuration(700L).setInterpolator(
+            OvershootInterpolator(5.0F)
+        ).start()
+
         mapView.foreground = ContextCompat.getDrawable(this, R.drawable.fab_foreground)
         mainActionFab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_my_location))
+
     }
 
     private fun foldFAB() {
         addPinFab.hide()
         addPinTextView.visibility = View.GONE
         myLocationText.visibility = View.GONE
+
+        ViewCompat.animate(mainActionFab).rotation(0.0F).withLayer().setDuration(700L).setInterpolator(
+            OvershootInterpolator(5.0F)
+        ).start()
+
+        ViewCompat.animate(addPinFab).rotation(0.0F).withLayer().setDuration(700L).setInterpolator(
+            OvershootInterpolator(5.0F)
+        ).start()
 
         mapView.foreground = null
         mainActionFab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_main_action))
