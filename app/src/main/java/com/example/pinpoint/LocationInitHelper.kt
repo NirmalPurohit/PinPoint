@@ -1,7 +1,9 @@
-package com.example.pinpoint.com.example.pinpoint
+package com.example.pinpoint
 
 import android.app.Activity
+
 import androidx.appcompat.content.res.AppCompatResources
+
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
@@ -13,6 +15,7 @@ import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListene
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.R
 import com.mapbox.maps.plugin.locationcomponent.location
+
 import java.lang.ref.WeakReference
 
 class LocationInitHelper(val activity: WeakReference<Activity>){
@@ -89,7 +92,6 @@ class LocationInitHelper(val activity: WeakReference<Activity>){
     }
 
     private fun onCameraTrackingDismissed() {
-        // Toast.makeText(this, "onCameraTrackingDismissed", Toast.LENGTH_SHORT).show()
         mapView.location
             .removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
         mapView.location

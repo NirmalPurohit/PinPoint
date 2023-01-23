@@ -1,27 +1,38 @@
 package com.example.pinpoint
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import android.widget.TextView
+
+import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 import com.example.pinpoint.R.id.*
-import com.example.pinpoint.com.example.pinpoint.LocationInitHelper
-import com.example.pinpoint.com.example.pinpoint.LocationListeningCallback
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.location.LocationEngineRequest
+import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
+import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.location
 
@@ -44,6 +55,8 @@ class MapsActivity : AppCompatActivity() {
     private lateinit var myLocationText: TextView
 
     private var isAllFabsVisible = false
+
+    private lateinit var currentLoc: Point
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,7 +92,7 @@ class MapsActivity : AppCompatActivity() {
         val DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5
 
         locationEngine = LocationEngineProvider.getBestLocationEngine(this)
-        var request = LocationEngineRequest.Builder(DEFAULT_INTERVAL_IN_MILLISECONDS)
+        val request = LocationEngineRequest.Builder(DEFAULT_INTERVAL_IN_MILLISECONDS)
             .setPriority(LocationEngineRequest.PRIORITY_NO_POWER)
             .setMaxWaitTime(DEFAULT_MAX_WAIT_TIME)
             .build()
@@ -112,12 +125,19 @@ class MapsActivity : AppCompatActivity() {
                 (if (!isAllFabsVisible!!) {
                     unfoldFAB()
 
-                    /*mainActionFab.setOnClickListener {
-                        onMapReady()
-                        Toast.makeText(this, "isAllFabsVisible: " + isAllFabsVisible, Toast.LENGTH_LONG).show()
-                        foldFAB()
-                        isAllFabsVisible = false
-                    }*/
+                    mainActionFab.setOnClickListener (
+                        View.OnClickListener {
+                            (if (isAllFabsVisible!!) {
+                                onMapReady()
+                                foldFAB()
+
+                                false
+                            } else {
+                                unfoldFAB()
+
+                                true
+                            }).also { isAllFabsVisible = it }
+                        })
 
                     true
                 }else {
@@ -128,6 +148,8 @@ class MapsActivity : AppCompatActivity() {
             })
 
         addPinFab.setOnClickListener{
+            this.currentLoc = mapView.getMapboxMap().cameraState.center
+                setAnnotationToMap()
                 foldFAB()
                 isAllFabsVisible = false
         }
@@ -168,6 +190,43 @@ class MapsActivity : AppCompatActivity() {
         mainActionFab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_main_action))
     }
 
+    private fun setAnnotationToMap() {
+        bitmapFromDrawableRes(
+            this@MapsActivity,
+            R.drawable.red_marker
+        )?.let {
+            val annotationApi = mapView?.annotations
+            val pointAnnotationManager = annotationApi?.createPointAnnotationManager()
+            val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
+                .withPoint(Point.fromLngLat(currentLoc.longitude(), currentLoc.latitude()))
+                .withIconImage(it)
+                .withDraggable(true)
+            pointAnnotationManager?.create(pointAnnotationOptions)
+        }
+    }
+    
+    private fun bitmapFromDrawableRes(context: Context, @DrawableRes resourceId: Int) =
+        convertDrawableToBitmap(AppCompatResources.getDrawable(context, resourceId))
+
+    private fun convertDrawableToBitmap(sourceDrawable: Drawable?): Bitmap? {
+        if (sourceDrawable == null) {
+            return null
+        }
+        return if (sourceDrawable is BitmapDrawable) {
+            sourceDrawable.bitmap
+        } else {
+            val constantState = sourceDrawable.constantState ?: return null
+            val drawable = constantState.newDrawable().mutate()
+            val bitmap: Bitmap = Bitmap.createBitmap(
+                drawable.intrinsicWidth, drawable.intrinsicHeight,
+                Bitmap.Config.ARGB_8888
+            )
+            val canvas = Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            bitmap
+        }
+    }
 
     override fun onRequestPermissionsResult(
         requestCode: Int,

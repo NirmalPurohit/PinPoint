@@ -1,8 +1,10 @@
-package com.example.pinpoint.com.example.pinpoint
+package com.example.pinpoint
 
 import android.app.Activity
+
 import com.mapbox.android.core.location.LocationEngineCallback
 import com.mapbox.android.core.location.LocationEngineResult
+
 import java.lang.ref.WeakReference
 
 
@@ -11,6 +13,7 @@ class LocationListeningCallback internal constructor(activity: Activity) :
 
     private val activityWeakReference: WeakReference<Activity>
 
+
     init {this.activityWeakReference = WeakReference(activity)
     }
 
@@ -18,7 +21,7 @@ class LocationListeningCallback internal constructor(activity: Activity) :
 
         // The LocationEngineCallback interface's method which fires when the device's location has changed.
 
-        result.getLastLocation()
+        result.lastLocation
 
     }
 
