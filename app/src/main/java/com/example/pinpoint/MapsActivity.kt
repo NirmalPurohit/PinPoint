@@ -1,6 +1,7 @@
 package com.example.pinpoint
 
 import android.Manifest
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -8,9 +9,11 @@ import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import android.widget.TextView
+import android.widget.Toast
 
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
@@ -30,11 +33,15 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
+import com.mapbox.maps.plugin.annotation.Annotation
 import com.mapbox.maps.plugin.annotation.annotations
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.OnPointAnnotationDragListener
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.location
+
 
 import java.lang.ref.WeakReference
 
@@ -50,6 +57,9 @@ class MapsActivity : AppCompatActivity() {
 
     private lateinit var mainActionFab: FloatingActionButton
     private lateinit var addPinFab: FloatingActionButton
+    private lateinit var confirmPinFab: FloatingActionButton
+    private lateinit var cancelPinFab: FloatingActionButton
+
 
     private lateinit var addPinTextView: TextView
     private lateinit var myLocationText: TextView
@@ -67,10 +77,16 @@ class MapsActivity : AppCompatActivity() {
         addPinFab = findViewById(add_pin_fab)
         addPinTextView = findViewById(add_pin_text)
         myLocationText = findViewById(user_location_text)
+        confirmPinFab = findViewById(confirm_pin_fab)
+        cancelPinFab = findViewById(cancel_pin_fab)
+
 
         addPinFab.visibility = View.GONE
         addPinTextView.visibility = View.GONE
         myLocationText.visibility = View.GONE
+        confirmPinFab.visibility = View.GONE
+        cancelPinFab.visibility = View.GONE
+
 
         locationInitHelper = LocationInitHelper(WeakReference(this))
         locationInitHelper.setMapView(mapView)
@@ -111,7 +127,7 @@ class MapsActivity : AppCompatActivity() {
         locationEngine.getLastLocation(callback)
         mapView.getMapboxMap().setCamera(
             CameraOptions.Builder()
-                .zoom(12.0)
+                .zoom(15.0)
                 .build()
         )
         locationInitHelper.initLocationComponent()
@@ -149,9 +165,9 @@ class MapsActivity : AppCompatActivity() {
 
         addPinFab.setOnClickListener{
             this.currentLoc = mapView.getMapboxMap().cameraState.center
-                setAnnotationToMap()
-                foldFAB()
-                isAllFabsVisible = false
+            setAnnotationToMap()
+            foldFAB()
+            isAllFabsVisible = false
         }
         }
 
@@ -194,7 +210,7 @@ class MapsActivity : AppCompatActivity() {
         bitmapFromDrawableRes(
             this@MapsActivity,
             R.drawable.red_marker
-        )?.let {
+        )?.let { it ->
             val annotationApi = mapView?.annotations
             val pointAnnotationManager = annotationApi?.createPointAnnotationManager()
             val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
@@ -202,6 +218,23 @@ class MapsActivity : AppCompatActivity() {
                 .withIconImage(it)
                 .withDraggable(true)
             pointAnnotationManager?.create(pointAnnotationOptions)
+            if (pointAnnotationManager != null) {
+                setPinActions(pointAnnotationManager)
+            }
+            pointAnnotationManager?.addDragListener(object: OnPointAnnotationDragListener {
+
+                override fun onAnnotationDrag(annotation: Annotation<*>) {
+                    Log.d(TAG, "The marker is about to move")
+                }
+
+                override fun onAnnotationDragFinished(annotation: Annotation<*>) {
+                    setPinActions(pointAnnotationManager)
+                }
+
+                override fun onAnnotationDragStarted(annotation: Annotation<*>) {
+                    Log.d(TAG, "The marker is moving")
+                }
+            })
         }
     }
     
@@ -226,6 +259,32 @@ class MapsActivity : AppCompatActivity() {
             drawable.draw(canvas)
             bitmap
         }
+    }
+
+    private fun setPinActions(pointAnnotationManager: PointAnnotationManager) {
+        confirmPinFab.visibility = View.VISIBLE
+        cancelPinFab.visibility = View.VISIBLE
+        confirmPinFab.setOnClickListener(
+            View.OnClickListener {
+                pointAnnotationManager.annotations.forEach {
+                    it.isDraggable = !it.isDraggable
+                    savePinLocation(it.point)
+                    confirmPinFab.visibility = View.GONE
+                    cancelPinFab.visibility = View.GONE
+                }
+            })
+        cancelPinFab.setOnClickListener(View.OnClickListener {
+            pointAnnotationManager.annotations.forEach{
+                pointAnnotationManager.delete(it)
+            }
+            confirmPinFab.visibility = View.GONE
+            cancelPinFab.visibility = View.GONE
+        })
+    }
+
+    // TODO: Replace the toast with new activity/fragment
+    private fun savePinLocation(markerPoint: Point){
+        Toast.makeText(this, "Latitude: ${markerPoint.latitude()}, Longitute ${markerPoint.longitude()}", Toast.LENGTH_LONG).show()
     }
 
     override fun onRequestPermissionsResult(

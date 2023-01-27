@@ -59,4 +59,32 @@
         app:layout_constraintEnd_toStartOf="@+id/add_pin_fab"
         app:layout_constraintTop_toTopOf="@+id/add_pin_fab" />
 
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/confirm_pin_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/green"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/cancel_pin_fab"
+        app:layout_constraintEnd_toEndOf="@+id/cancel_pin_fab"
+        app:layout_constraintStart_toStartOf="@+id/cancel_pin_fab"
+        android:src="@drawable/ic_confirm_pin"
+        tools:ignore="ImageContrastCheck"
+        android:contentDescription="@string/confirm_dropped_pin"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/cancel_pin_fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/red"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/main_action_fab"
+        app:layout_constraintEnd_toEndOf="@+id/main_action_fab"
+        app:layout_constraintStart_toStartOf="@+id/main_action_fab"
+        android:src="@drawable/ic_cancel_pin"
+        tools:ignore="ImageContrastCheck"
+        android:contentDescription="@string/confirm_dropped_pin"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,4 +2,5 @@
 <resources>
     <string name="add_pin">Add Pin</string>
     <string name="my_location">My Location</string>
+    <string name="confirm_dropped_pin">Confirm dropped pin</string>
 </resources>
