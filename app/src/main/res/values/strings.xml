@@ -6,4 +6,9 @@
     <string name="add_pin">Add Pin</string>
     <string name="my_location">My Location</string>
     <string name="confirm_dropped_pin">Confirm dropped pin</string>
+    <string name="submit_button">Submit</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="large_text">
+        Let\'s add details to the Pin
+    </string>
 </resources>

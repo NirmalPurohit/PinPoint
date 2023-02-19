@@ -1,5 +1,6 @@
 package com.example.pinpoint
 
+
 import android.Manifest
 import android.content.ContentValues.TAG
 import android.content.Context
@@ -13,19 +14,15 @@ import android.util.Log
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import android.widget.TextView
-import android.widget.Toast
-
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
-
+import androidx.fragment.app.FragmentTransaction
 import com.example.pinpoint.R.id.*
-
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-
 import com.mapbox.android.core.location.LocationEngine
 import com.mapbox.android.core.location.LocationEngineProvider
 import com.mapbox.android.core.location.LocationEngineRequest
@@ -35,18 +32,16 @@ import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
 import com.mapbox.maps.plugin.annotation.Annotation
 import com.mapbox.maps.plugin.annotation.annotations
-import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.OnPointAnnotationDragListener
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.location
-
-
 import java.lang.ref.WeakReference
 
 
-class MapsActivity : AppCompatActivity() {
+class MapsActivity : AppCompatActivity(), FragmentCallback {
 
     private lateinit var mapView: MapView
     private lateinit var locationEngine: LocationEngine
@@ -65,8 +60,10 @@ class MapsActivity : AppCompatActivity() {
     private lateinit var myLocationText: TextView
 
     private var isAllFabsVisible = false
+    private var isPinCancelled = false
 
     private lateinit var currentLoc: Point
+    private var pointAnnotationManager: PointAnnotationManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -180,10 +177,6 @@ class MapsActivity : AppCompatActivity() {
             OvershootInterpolator(5.0F)
         ).start()
 
-        ViewCompat.animate(addPinFab).rotation(360.0F).withLayer().setDuration(700L).setInterpolator(
-            OvershootInterpolator(5.0F)
-        ).start()
-
         mapView.foreground = ContextCompat.getDrawable(this, R.drawable.fab_foreground)
         mainActionFab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_my_location))
 
@@ -198,10 +191,6 @@ class MapsActivity : AppCompatActivity() {
             OvershootInterpolator(5.0F)
         ).start()
 
-        ViewCompat.animate(addPinFab).rotation(0.0F).withLayer().setDuration(700L).setInterpolator(
-            OvershootInterpolator(5.0F)
-        ).start()
-
         mapView.foreground = null
         mainActionFab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_main_action))
     }
@@ -212,14 +201,14 @@ class MapsActivity : AppCompatActivity() {
             R.drawable.red_marker
         )?.let { it ->
             val annotationApi = mapView?.annotations
-            val pointAnnotationManager = annotationApi?.createPointAnnotationManager()
+            pointAnnotationManager = annotationApi?.createPointAnnotationManager()
             val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
                 .withPoint(Point.fromLngLat(currentLoc.longitude(), currentLoc.latitude()))
                 .withIconImage(it)
                 .withDraggable(true)
             pointAnnotationManager?.create(pointAnnotationOptions)
             if (pointAnnotationManager != null) {
-                setPinActions(pointAnnotationManager)
+                setPinActions(pointAnnotationManager!!)
             }
             pointAnnotationManager?.addDragListener(object: OnPointAnnotationDragListener {
 
@@ -228,7 +217,7 @@ class MapsActivity : AppCompatActivity() {
                 }
 
                 override fun onAnnotationDragFinished(annotation: Annotation<*>) {
-                    setPinActions(pointAnnotationManager)
+                    setPinActions(pointAnnotationManager!!)
                 }
 
                 override fun onAnnotationDragStarted(annotation: Annotation<*>) {
@@ -268,7 +257,7 @@ class MapsActivity : AppCompatActivity() {
             View.OnClickListener {
                 pointAnnotationManager.annotations.forEach {
                     it.isDraggable = !it.isDraggable
-                    savePinLocation(it.point)
+                    savePinLocation()
                     confirmPinFab.visibility = View.GONE
                     cancelPinFab.visibility = View.GONE
                 }
@@ -282,9 +271,11 @@ class MapsActivity : AppCompatActivity() {
         })
     }
 
-    // TODO: Replace the toast with new activity/fragment
-    private fun savePinLocation(markerPoint: Point){
-        Toast.makeText(this, "Latitude: ${markerPoint.latitude()}, Longitute ${markerPoint.longitude()}", Toast.LENGTH_LONG).show()
+    private fun savePinLocation() {
+        mainActionFab.visibility = View.GONE
+        val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
+        ft.replace(fragementHolder, PinDetails())
+        ft.commit()
     }
 
     override fun onRequestPermissionsResult(
@@ -307,6 +298,16 @@ class MapsActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         locationEngine.removeLocationUpdates(callback)
+    }
+
+    override fun onDataSent(fragmentClosed: Boolean) {
+        isPinCancelled = fragmentClosed
+        if (isPinCancelled) {
+            pointAnnotationManager?.annotations?.forEach {
+                pointAnnotationManager!!.delete(it)
+            }
+        }
+        mainActionFab.visibility = View.VISIBLE
     }
 
 }

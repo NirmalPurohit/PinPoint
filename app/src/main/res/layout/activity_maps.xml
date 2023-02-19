@@ -70,7 +70,7 @@
         app:layout_constraintBottom_toTopOf="@+id/cancel_pin_fab"
         app:layout_constraintEnd_toEndOf="@+id/cancel_pin_fab"
         app:layout_constraintStart_toStartOf="@+id/cancel_pin_fab"
-        android:src="@drawable/ic_confirm_pin"
+        android:foreground="@drawable/ic_confirm_pin"
         tools:ignore="ImageContrastCheck"
         android:contentDescription="@string/confirm_dropped_pin"/>
 
@@ -83,8 +83,13 @@
         app:layout_constraintBottom_toTopOf="@+id/main_action_fab"
         app:layout_constraintEnd_toEndOf="@+id/main_action_fab"
         app:layout_constraintStart_toStartOf="@+id/main_action_fab"
-        android:src="@drawable/ic_cancel_pin"
+        android:foreground="@drawable/ic_cancel_pin"
         tools:ignore="ImageContrastCheck"
         android:contentDescription="@string/confirm_dropped_pin"/>
+
+    <FrameLayout
+        android:id="@+id/fragementHolder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
