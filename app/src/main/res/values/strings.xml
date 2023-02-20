@@ -8,7 +8,9 @@
     <string name="confirm_dropped_pin">Confirm dropped pin</string>
     <string name="submit_button">Submit</string>
     <string name="cancel_button">Cancel</string>
-    <string name="large_text">
-        Let\'s add details to the Pin
-    </string>
+    <string name="large_text">Pin Details</string>
+    <string name="drive_string">Instruction to reach</string>
+    <string name="time_string">Best time to visit</string>
+    <string name="parking_string">Parking Requirements</string>
+    <string name="comment_string">Additional Comments</string>
 </resources>
