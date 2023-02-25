@@ -1,12 +1,12 @@
 package com.example.pinpoint
 
-
 import android.Manifest
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -36,9 +37,12 @@ import com.mapbox.maps.plugin.annotation.generated.OnPointAnnotationDragListener
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
+
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.location
+import java.io.ByteArrayOutputStream
 import java.lang.ref.WeakReference
+import kotlin.math.log
 
 
 class MapsActivity : AppCompatActivity(), FragmentCallback {
@@ -55,9 +59,12 @@ class MapsActivity : AppCompatActivity(), FragmentCallback {
     private lateinit var confirmPinFab: FloatingActionButton
     private lateinit var cancelPinFab: FloatingActionButton
 
+    private lateinit var pinDetailsFragment: PinDetails
+
 
     private lateinit var addPinTextView: TextView
     private lateinit var myLocationText: TextView
+
 
     private var isAllFabsVisible = false
     private var isPinCancelled = false
@@ -76,6 +83,7 @@ class MapsActivity : AppCompatActivity(), FragmentCallback {
         myLocationText = findViewById(user_location_text)
         confirmPinFab = findViewById(confirm_pin_fab)
         cancelPinFab = findViewById(cancel_pin_fab)
+        pinDetailsFragment = supportFragmentManager.findFragmentById(fragementHolder) as PinDetails
 
 
         addPinFab.visibility = View.GONE
@@ -95,6 +103,11 @@ class MapsActivity : AppCompatActivity(), FragmentCallback {
         locationPermissionHelper = LocationPermissionHelper(WeakReference(this))
 
         isAllFabsVisible = false
+
+        // Removing the preloaded fragment
+        val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
+        ft.remove(pinDetailsFragment)
+        ft.commit()
 
         onMapReady()
     }
@@ -166,7 +179,7 @@ class MapsActivity : AppCompatActivity(), FragmentCallback {
             foldFAB()
             isAllFabsVisible = false
         }
-        }
+    }
 
     private fun unfoldFAB() {
         addPinFab.show()
@@ -273,9 +286,19 @@ class MapsActivity : AppCompatActivity(), FragmentCallback {
 
     private fun savePinLocation() {
         mainActionFab.visibility = View.GONE
-        val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
-        ft.replace(fragementHolder, PinDetails())
-        ft.commit()
+        var bitmapFragment: PinDetails
+        mapView.snapshot { snapShot ->
+
+            // Display the bitmap in the fragment
+            if (snapShot != null) {
+                bitmapFragment = PinDetails.newInstance(snapShot)
+                val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
+                ft.add(fragementHolder, bitmapFragment)
+                ft.commit()
+            } else {
+                Log.d(TAG, "Couldn't take the screenshot")
+            }
+        }
     }
 
     override fun onRequestPermissionsResult(

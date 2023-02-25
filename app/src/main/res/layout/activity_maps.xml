@@ -5,7 +5,10 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:id="@+id/main_activity_container">
+
+
     <com.mapbox.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
@@ -87,9 +90,11 @@
         tools:ignore="ImageContrastCheck"
         android:contentDescription="@string/confirm_dropped_pin"/>
 
-    <FrameLayout
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragementHolder"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:name="com.example.pinpoint.PinDetails"
+        tools:layout="@layout/fragment_pin_details" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
